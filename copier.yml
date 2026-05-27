@@ -66,6 +66,7 @@ db_pass:
   type: str
   help: "Password database PostgreSQL"
   secret: true
+  default: ""
   validator: >-
     {% if not db_pass %}
     Password tidak boleh kosong
