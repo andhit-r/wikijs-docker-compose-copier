@@ -54,12 +54,14 @@ jobs:
 
       - name: Validate rendered values in docker-compose.yml
         run: |
-          grep -q "name: inverseproxy_shared"          /tmp/test-output/docker-compose.yml
-          grep -q "container_name: test-wiki"          /tmp/test-output/docker-compose.yml
-          grep -q "Host(\`wiki.example.com\`)"         /tmp/test-output/docker-compose.yml
-          grep -q "entrypoints=https"                  /tmp/test-output/docker-compose.yml
-          grep -q "certresolver=letsencrypt"           /tmp/test-output/docker-compose.yml
-          grep -q "test-wiki-db-data"                  /tmp/test-output/docker-compose.yml
+          grep -q "name: inverseproxy_shared"                /tmp/test-output/docker-compose.yml
+          grep -q "traefik.docker.network=inverseproxy_shared" /tmp/test-output/docker-compose.yml
+          grep -q "container_name: test-wiki"                /tmp/test-output/docker-compose.yml
+          grep -q 'rule=Host(`${DOMAIN}`)'                   /tmp/test-output/docker-compose.yml
+          grep -q "entrypoints=https"                        /tmp/test-output/docker-compose.yml
+          grep -q "certresolver=letsencrypt"                 /tmp/test-output/docker-compose.yml
+          grep -q "test-wiki-db-data"                        /tmp/test-output/docker-compose.yml
+          grep -q "container_name: test-wiki-db"             /tmp/test-output/docker-compose.yml
 
       - name: Validate rendered values in .env
         run: |
