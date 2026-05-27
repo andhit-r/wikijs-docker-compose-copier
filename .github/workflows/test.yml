@@ -1,0 +1,81 @@
+name: Test Copier Template
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Render & Validate Template
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Copier
+        run: pip install copier
+
+      - name: Render template with test data
+        run: |
+          copier copy . /tmp/test-output \
+            --defaults \
+            --overwrite \
+            --data project_name=test-wiki \
+            --data traefik_network=inverseproxy_shared \
+            --data domain=wiki.example.com \
+            --data traefik_entrypoint=https \
+            --data traefik_certresolver=letsencrypt \
+            --data db_name=wikijs \
+            --data db_user=wikijs \
+            --data db_pass=supersecretpassword \
+            --data tz=Asia/Jakarta
+
+      - name: Validate docker-compose.yml exists
+        run: test -f /tmp/test-output/docker-compose.yml
+
+      - name: Validate .env exists
+        run: test -f /tmp/test-output/.env
+
+      - name: Validate .gitignore exists
+        run: test -f /tmp/test-output/.gitignore
+
+      - name: Validate docker-compose.yml syntax (YAML)
+        run: python -c "import yaml, sys; yaml.safe_load(open('/tmp/test-output/docker-compose.yml'))"
+
+      - name: Validate rendered values in docker-compose.yml
+        run: |
+          grep -q "name: inverseproxy_shared"          /tmp/test-output/docker-compose.yml
+          grep -q "container_name: test-wiki"          /tmp/test-output/docker-compose.yml
+          grep -q "Host(\`wiki.example.com\`)"         /tmp/test-output/docker-compose.yml
+          grep -q "entrypoints=https"                  /tmp/test-output/docker-compose.yml
+          grep -q "certresolver=letsencrypt"           /tmp/test-output/docker-compose.yml
+          grep -q "test-wiki-db-data"                  /tmp/test-output/docker-compose.yml
+
+      - name: Validate rendered values in .env
+        run: |
+          grep -q "DOMAIN=wiki.example.com"  /tmp/test-output/.env
+          grep -q "DB_NAME=wikijs"           /tmp/test-output/.env
+          grep -q "DB_USER=wikijs"           /tmp/test-output/.env
+          grep -q "TZ=Asia/Jakarta"          /tmp/test-output/.env
+
+      - name: Validate .env is listed in .gitignore
+        run: grep -q "^\.env$" /tmp/test-output/.gitignore
+
+      - name: Show rendered output (debug)
+        if: failure()
+        run: |
+          echo "=== docker-compose.yml ==="
+          cat /tmp/test-output/docker-compose.yml
+          echo ""
+          echo "=== .env ==="
+          cat /tmp/test-output/.env

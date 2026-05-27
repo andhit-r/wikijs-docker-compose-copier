@@ -1,0 +1,81 @@
+# =============================================================================
+# Wiki.js Copier Template
+# =============================================================================
+# Usage:
+#   copier copy gh:your-org/wikijs-copier ./my-wiki
+#   copier copy /path/to/wikijs-copier ./my-wiki
+# =============================================================================
+
+_subdirectory: template
+_min_copier_version: "9.0"
+
+# ── Project ───────────────────────────────────────────────────────────────────
+
+project_name:
+  type: str
+  help: "Nama project (digunakan sebagai nama container dan router Traefik)"
+  default: wikijs
+  validator: "{% if not project_name %}Project name tidak boleh kosong{% endif %}"
+
+# ── Network & Traefik ─────────────────────────────────────────────────────────
+
+traefik_network:
+  type: str
+  help: >-
+    Nama Docker network eksternal yang digunakan Traefik
+    (lihat: networks.shared.name di docker-compose.yml)
+  default: inverseproxy_shared
+  validator: "{% if not traefik_network %}Network name tidak boleh kosong{% endif %}"
+
+domain:
+  type: str
+  help: >-
+    Domain untuk Wiki.js — digunakan pada Traefik Host rule
+    (contoh: wiki.example.com)
+  placeholder: wiki.example.com
+  validator: "{% if not domain %}Domain tidak boleh kosong{% endif %}"
+
+traefik_entrypoint:
+  type: str
+  help: "Nama entrypoint Traefik untuk HTTPS"
+  default: https
+  choices:
+    - https
+    - websecure
+
+traefik_certresolver:
+  type: str
+  help: "Nama cert resolver Traefik untuk TLS (Let's Encrypt)"
+  default: letsencrypt
+
+# ── Database ──────────────────────────────────────────────────────────────────
+
+db_name:
+  type: str
+  help: "Nama database PostgreSQL"
+  default: wikijs
+  validator: "{% if not db_name %}DB name tidak boleh kosong{% endif %}"
+
+db_user:
+  type: str
+  help: "Username database PostgreSQL"
+  default: wikijs
+  validator: "{% if not db_user %}DB user tidak boleh kosong{% endif %}"
+
+db_pass:
+  type: str
+  help: "Password database PostgreSQL"
+  secret: true
+  validator: >-
+    {% if not db_pass %}
+    Password tidak boleh kosong
+    {% elif db_pass | length < 8 %}
+    Password minimal 8 karakter
+    {% endif %}
+
+# ── Timezone ──────────────────────────────────────────────────────────────────
+
+tz:
+  type: str
+  help: "Timezone container (contoh: Asia/Jakarta, UTC, Asia/Singapore)"
+  default: Asia/Jakarta
